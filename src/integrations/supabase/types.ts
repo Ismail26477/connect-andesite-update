@@ -14,7 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      members: {
+        Row: {
+          additional_notes: string | null
+          business_description: string | null
+          business_name: string
+          category: string
+          created_at: string
+          date_of_birth: string | null
+          email: string | null
+          facebook: string | null
+          id: string
+          instagram: string | null
+          linkedin: string | null
+          logo_url: string | null
+          name: string
+          office_location: string | null
+          phone: string | null
+          photo_url: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          additional_notes?: string | null
+          business_description?: string | null
+          business_name?: string
+          category?: string
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          logo_url?: string | null
+          name: string
+          office_location?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          additional_notes?: string | null
+          business_description?: string | null
+          business_name?: string
+          category?: string
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          logo_url?: string | null
+          name?: string
+          office_location?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
