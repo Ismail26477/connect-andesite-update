@@ -10,33 +10,52 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MembersIdRouteImport } from './routes/members.$id'
+import { Route as MembersIdEditRouteImport } from './routes/members.$id.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MembersIdRoute = MembersIdRouteImport.update({
+  id: '/members/$id',
+  path: '/members/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MembersIdEditRoute = MembersIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => MembersIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/members/$id': typeof MembersIdRouteWithChildren
+  '/members/$id/edit': typeof MembersIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/members/$id': typeof MembersIdRouteWithChildren
+  '/members/$id/edit': typeof MembersIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/members/$id': typeof MembersIdRouteWithChildren
+  '/members/$id/edit': typeof MembersIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/members/$id' | '/members/$id/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/members/$id' | '/members/$id/edit'
+  id: '__root__' | '/' | '/members/$id' | '/members/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MembersIdRoute: typeof MembersIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +67,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/members/$id': {
+      id: '/members/$id'
+      path: '/members/$id'
+      fullPath: '/members/$id'
+      preLoaderRoute: typeof MembersIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/members/$id/edit': {
+      id: '/members/$id/edit'
+      path: '/edit'
+      fullPath: '/members/$id/edit'
+      preLoaderRoute: typeof MembersIdEditRouteImport
+      parentRoute: typeof MembersIdRoute
+    }
   }
 }
 
+interface MembersIdRouteChildren {
+  MembersIdEditRoute: typeof MembersIdEditRoute
+}
+
+const MembersIdRouteChildren: MembersIdRouteChildren = {
+  MembersIdEditRoute: MembersIdEditRoute,
+}
+
+const MembersIdRouteWithChildren = MembersIdRoute._addFileChildren(
+  MembersIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MembersIdRoute: MembersIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
