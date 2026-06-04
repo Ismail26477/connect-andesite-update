@@ -98,38 +98,43 @@ function ProfilePage() {
           ) : null}
         </div>
 
+        {/* Tap-to-edit hint */}
+        <p className="mt-4 text-center text-xs text-muted-foreground">Tap any field below to edit it</p>
+
         {/* Contact section */}
         <Section title="Contact">
-          <Row icon={<Phone className="h-5 w-5" />} label="Phone" value={member.phone} href={member.phone ? `tel:${member.phone}` : undefined} />
-          <Row icon={<Mail className="h-5 w-5" />} label="Email" value={member.email} href={member.email ? `mailto:${member.email}` : undefined} />
-          <Row icon={<Globe className="h-5 w-5" />} label="Website" value={member.website} href={member.website ?? undefined} external />
-          <Row icon={<MapPin className="h-5 w-5" />} label="Office Location" value={member.office_location} />
-          <Row icon={<Cake className="h-5 w-5" />} label="Date of Birth" value={member.date_of_birth} />
+          <Row memberId={member.id} icon={<Phone className="h-5 w-5" />} label="Phone" value={member.phone} href={member.phone ? `tel:${member.phone}` : undefined} />
+          <Row memberId={member.id} icon={<Mail className="h-5 w-5" />} label="Email" value={member.email} href={member.email ? `mailto:${member.email}` : undefined} />
+          <Row memberId={member.id} icon={<Globe className="h-5 w-5" />} label="Website" value={member.website} href={member.website ?? undefined} external />
+          <Row memberId={member.id} icon={<MapPin className="h-5 w-5" />} label="Office Location" value={member.office_location} />
+          <Row memberId={member.id} icon={<Cake className="h-5 w-5" />} label="Date of Birth" value={member.date_of_birth} />
         </Section>
 
         {/* About */}
         <Section title="About the Business">
-          <div className="rounded-2xl bg-white p-4 text-sm leading-relaxed text-foreground shadow-card">
-            {member.business_description || <MissingInline />}
-          </div>
+          <Link to="/members/$id/edit" params={{ id: member.id }} className="block active:opacity-80">
+            <div className="rounded-2xl bg-white p-4 text-sm leading-relaxed text-foreground shadow-card">
+              {member.business_description || <MissingInline />}
+            </div>
+          </Link>
         </Section>
 
         {/* Social */}
         <Section title="Social">
           <div className="flex flex-wrap gap-2">
-            <SocialChip icon={<Instagram className="h-4 w-4" />} label="Instagram" href={member.instagram} />
-            <SocialChip icon={<Facebook className="h-4 w-4" />} label="Facebook" href={member.facebook} />
-            <SocialChip icon={<Linkedin className="h-4 w-4" />} label="LinkedIn" href={member.linkedin} />
+            <SocialChip memberId={member.id} icon={<Instagram className="h-4 w-4" />} label="Instagram" href={member.instagram} />
+            <SocialChip memberId={member.id} icon={<Facebook className="h-4 w-4" />} label="Facebook" href={member.facebook} />
+            <SocialChip memberId={member.id} icon={<Linkedin className="h-4 w-4" />} label="LinkedIn" href={member.linkedin} />
           </div>
         </Section>
 
-        {member.additional_notes ? (
-          <Section title="Notes">
+        <Section title="Notes">
+          <Link to="/members/$id/edit" params={{ id: member.id }} className="block active:opacity-80">
             <div className="rounded-2xl bg-white p-4 text-sm text-muted-foreground shadow-card">
-              {member.additional_notes}
+              {member.additional_notes || <MissingInline />}
             </div>
-          </Section>
-        ) : null}
+          </Link>
+        </Section>
       </div>
 
       {/* Sticky CTA */}
