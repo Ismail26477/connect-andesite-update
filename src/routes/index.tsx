@@ -1,8 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Search, Pencil, User2, Briefcase, MapPin } from "lucide-react";
-import { fetchMembers, initials, type Member } from "@/lib/members";
+import { Search, Pencil, User2, Briefcase, MapPin, Plus, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { createMember, fetchMembers, initials, type Member } from "@/lib/members";
 
 export const Route = createFileRoute("/")({
   head: () => ({
