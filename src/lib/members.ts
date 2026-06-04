@@ -74,8 +74,12 @@ export async function uploadMedia(memberId: string, kind: "photo" | "logo", file
     contentType: file.type,
   });
   if (error) throw error;
-  const { data } = supabase.storage.from("member-media").getPublicUrl(path);
-  return data.publicUrl;
+  // Bucket is private — use a long-lived signed URL (10 years) so the image renders publicly.
+  const { data, error: signErr } = await supabase.storage
+    .from("member-media")
+    .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+  if (signErr) throw signErr;
+  return data.signedUrl;
 }
 
 export function initials(name: string) {
