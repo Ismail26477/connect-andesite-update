@@ -46,6 +46,25 @@ export async function updateMember(id: string, patch: Partial<Member>) {
   if (error) throw error;
 }
 
+export async function createMember(seed?: Partial<Member>): Promise<Member> {
+  const { data, error } = await supabase
+    .from("members")
+    .insert({
+      name: seed?.name ?? "New Member",
+      category: seed?.category ?? "",
+      business_name: seed?.business_name ?? "",
+    })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as Member;
+}
+
+export async function deleteMember(id: string) {
+  const { error } = await supabase.from("members").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function uploadMedia(memberId: string, kind: "photo" | "logo", file: File): Promise<string> {
   const ext = file.name.split(".").pop() || "jpg";
   const path = `${memberId}/${kind}-${Date.now()}.${ext}`;

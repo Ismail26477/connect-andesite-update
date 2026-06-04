@@ -1,8 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Search, Pencil, User2, Briefcase, MapPin } from "lucide-react";
-import { fetchMembers, initials, type Member } from "@/lib/members";
+import { Search, Pencil, User2, Briefcase, MapPin, Plus, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { createMember, fetchMembers, initials, type Member } from "@/lib/members";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -15,12 +16,24 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
   const { data: members = [], isLoading } = useQuery({
     queryKey: ["members"],
     queryFn: fetchMembers,
   });
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("All");
+
+  const addMutation = useMutation({
+    mutationFn: () => createMember(),
+    onSuccess: async (m) => {
+      await qc.invalidateQueries({ queryKey: ["members"] });
+      toast.success("Member created — fill in details");
+      navigate({ to: "/members/$id/edit", params: { id: m.id } });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not create member"),
+  });
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -108,6 +121,16 @@ function HomePage() {
           </ul>
         )}
       </main>
+
+      {/* Floating Add Member button */}
+      <button
+        onClick={() => addMutation.mutate()}
+        disabled={addMutation.isPending}
+        className="fixed bottom-6 right-5 z-20 flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-elevated active:opacity-90 disabled:opacity-60"
+      >
+        {addMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
+        Add Member
+      </button>
     </div>
   );
 }
