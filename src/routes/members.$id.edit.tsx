@@ -53,7 +53,12 @@ function EditPage() {
     setUploading(kind);
     try {
       const url = await uploadMedia(id, kind, file);
-      set(kind === "photo" ? "photo_url" : "logo_url", url);
+      const field = kind === "photo" ? "photo_url" : "logo_url";
+      set(field, url);
+      // Auto-persist immediately so the image survives even if user leaves without tapping Save.
+      await updateMember(id, { [field]: url });
+      await qc.invalidateQueries({ queryKey: ["member", id] });
+      await qc.invalidateQueries({ queryKey: ["members"] });
       toast.success(`${kind === "photo" ? "Photo" : "Logo"} uploaded`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Upload failed");
