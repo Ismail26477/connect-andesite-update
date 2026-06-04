@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MembersIdRouteImport } from './routes/members.$id'
+import { Route as MembersIdIndexRouteImport } from './routes/members.$id.index'
 import { Route as MembersIdEditRouteImport } from './routes/members.$id.edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const MembersIdRoute = MembersIdRouteImport.update({
   path: '/members/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MembersIdIndexRoute = MembersIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MembersIdRoute,
+} as any)
 const MembersIdEditRoute = MembersIdEditRouteImport.update({
   id: '/edit',
   path: '/edit',
@@ -33,24 +39,26 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/members/$id': typeof MembersIdRouteWithChildren
   '/members/$id/edit': typeof MembersIdEditRoute
+  '/members/$id/': typeof MembersIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/members/$id': typeof MembersIdRouteWithChildren
   '/members/$id/edit': typeof MembersIdEditRoute
+  '/members/$id': typeof MembersIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/members/$id': typeof MembersIdRouteWithChildren
   '/members/$id/edit': typeof MembersIdEditRoute
+  '/members/$id/': typeof MembersIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/members/$id' | '/members/$id/edit'
+  fullPaths: '/' | '/members/$id' | '/members/$id/edit' | '/members/$id/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/members/$id' | '/members/$id/edit'
-  id: '__root__' | '/' | '/members/$id' | '/members/$id/edit'
+  to: '/' | '/members/$id/edit' | '/members/$id'
+  id: '__root__' | '/' | '/members/$id' | '/members/$id/edit' | '/members/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -74,6 +82,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MembersIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/members/$id/': {
+      id: '/members/$id/'
+      path: '/'
+      fullPath: '/members/$id/'
+      preLoaderRoute: typeof MembersIdIndexRouteImport
+      parentRoute: typeof MembersIdRoute
+    }
     '/members/$id/edit': {
       id: '/members/$id/edit'
       path: '/edit'
@@ -86,10 +101,12 @@ declare module '@tanstack/react-router' {
 
 interface MembersIdRouteChildren {
   MembersIdEditRoute: typeof MembersIdEditRoute
+  MembersIdIndexRoute: typeof MembersIdIndexRoute
 }
 
 const MembersIdRouteChildren: MembersIdRouteChildren = {
   MembersIdEditRoute: MembersIdEditRoute,
+  MembersIdIndexRoute: MembersIdIndexRoute,
 }
 
 const MembersIdRouteWithChildren = MembersIdRoute._addFileChildren(
@@ -103,3 +120,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

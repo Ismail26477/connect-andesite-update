@@ -42,8 +42,14 @@ export async function fetchMember(id: string): Promise<Member | null> {
 }
 
 export async function updateMember(id: string, patch: Partial<Member>) {
-  const { error } = await supabase.from("members").update(patch).eq("id", id);
+  const { data, error } = await supabase
+    .from("members")
+    .update(patch)
+    .eq("id", id)
+    .select("*")
+    .single();
   if (error) throw error;
+  return data as Member;
 }
 
 export async function createMember(seed?: Partial<Member>): Promise<Member> {

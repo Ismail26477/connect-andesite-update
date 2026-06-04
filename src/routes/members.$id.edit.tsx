@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, useParams, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Camera, Check, Image as ImageIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, Check, Image as ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { fetchMember, initials, updateMember, uploadMedia, type Member } from "@/lib/members";
 import { toast } from "sonner";
 
@@ -55,13 +55,28 @@ function EditPage() {
       const url = await uploadMedia(id, kind, file);
       const field = kind === "photo" ? "photo_url" : "logo_url";
       set(field, url);
-      // Auto-persist immediately so the image survives even if user leaves without tapping Save.
       await updateMember(id, { [field]: url });
       await qc.invalidateQueries({ queryKey: ["member", id] });
       await qc.invalidateQueries({ queryKey: ["members"] });
       toast.success(`${kind === "photo" ? "Photo" : "Logo"} uploaded`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(null);
+    }
+  }
+
+  async function handleRemove(kind: "photo" | "logo") {
+    const field = kind === "photo" ? "photo_url" : "logo_url";
+    setUploading(kind);
+    try {
+      set(field, null);
+      await updateMember(id, { [field]: null });
+      await qc.invalidateQueries({ queryKey: ["member", id] });
+      await qc.invalidateQueries({ queryKey: ["members"] });
+      toast.success(`${kind === "photo" ? "Profile photo" : "Business logo"} removed`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not remove image");
     } finally {
       setUploading(null);
     }
@@ -109,6 +124,7 @@ function EditPage() {
               fallback={initials(form.name || "?")}
               uploading={uploading === "photo"}
               onPick={(f) => handleUpload("photo", f)}
+              onRemove={() => handleRemove("photo")}
               shape="round"
             />
             <UploadAvatar
@@ -117,6 +133,7 @@ function EditPage() {
               fallback={<ImageIcon className="h-6 w-6" />}
               uploading={uploading === "logo"}
               onPick={(f) => handleUpload("logo", f)}
+              onRemove={() => handleRemove("logo")}
               shape="square"
             />
           </div>
@@ -209,24 +226,21 @@ function Field({
 }
 
 function UploadAvatar({
-  label, src, fallback, uploading, onPick, shape,
+  label, src, fallback, uploading, onPick, onRemove, shape,
 }: {
   label: string;
   src: string | null;
   fallback: React.ReactNode;
   uploading: boolean;
   onPick: (f: File) => void;
+  onRemove: () => void;
   shape: "round" | "square";
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const radius = shape === "round" ? "rounded-full" : "rounded-2xl";
   return (
-    <div className="flex flex-col items-center">
-      <button
-        type="button"
-        onClick={() => ref.current?.click()}
-        className={"relative h-24 w-24 overflow-hidden " + radius + " bg-accent ring-2 ring-border active:opacity-80"}
-      >
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-2">
+      <div className={"relative h-24 w-24 overflow-hidden bg-accent ring-2 ring-border " + radius}>
         {src ? (
           <img src={src} alt={label} className="h-full w-full object-cover" />
         ) : (
@@ -234,10 +248,30 @@ function UploadAvatar({
         )}
         <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-primary py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground">
           {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
-          {uploading ? "Uploading" : "Change"}
+          {uploading ? "Uploading" : "Ready"}
         </div>
-      </button>
-      <span className="mt-2 text-xs font-medium text-muted-foreground">{label}</span>
+      </div>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <div className="grid w-full grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => ref.current?.click()}
+          disabled={uploading}
+          className="flex h-10 items-center justify-center gap-1 rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-card active:opacity-90 disabled:opacity-60"
+        >
+          {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+          Replace
+        </button>
+        <button
+          type="button"
+          onClick={onRemove}
+          disabled={uploading || !src}
+          className="flex h-10 items-center justify-center gap-1 rounded-xl bg-secondary px-3 text-xs font-semibold text-foreground shadow-card active:bg-accent disabled:opacity-50"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          Remove
+        </button>
+      </div>
       <input
         ref={ref}
         type="file"
