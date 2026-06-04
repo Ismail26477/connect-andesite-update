@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, useParams, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Camera, Check, Image as ImageIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, Check, Image as ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import { fetchMember, initials, updateMember, uploadMedia, type Member } from "@/lib/members";
 import { toast } from "sonner";
 
@@ -55,13 +55,28 @@ function EditPage() {
       const url = await uploadMedia(id, kind, file);
       const field = kind === "photo" ? "photo_url" : "logo_url";
       set(field, url);
-      // Auto-persist immediately so the image survives even if user leaves without tapping Save.
       await updateMember(id, { [field]: url });
       await qc.invalidateQueries({ queryKey: ["member", id] });
       await qc.invalidateQueries({ queryKey: ["members"] });
       toast.success(`${kind === "photo" ? "Photo" : "Logo"} uploaded`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(null);
+    }
+  }
+
+  async function handleRemove(kind: "photo" | "logo") {
+    const field = kind === "photo" ? "photo_url" : "logo_url";
+    setUploading(kind);
+    try {
+      set(field, null);
+      await updateMember(id, { [field]: null });
+      await qc.invalidateQueries({ queryKey: ["member", id] });
+      await qc.invalidateQueries({ queryKey: ["members"] });
+      toast.success(`${kind === "photo" ? "Profile photo" : "Business logo"} removed`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not remove image");
     } finally {
       setUploading(null);
     }
@@ -109,6 +124,7 @@ function EditPage() {
               fallback={initials(form.name || "?")}
               uploading={uploading === "photo"}
               onPick={(f) => handleUpload("photo", f)}
+              onRemove={() => handleRemove("photo")}
               shape="round"
             />
             <UploadAvatar
@@ -117,6 +133,7 @@ function EditPage() {
               fallback={<ImageIcon className="h-6 w-6" />}
               uploading={uploading === "logo"}
               onPick={(f) => handleUpload("logo", f)}
+              onRemove={() => handleRemove("logo")}
               shape="square"
             />
           </div>
