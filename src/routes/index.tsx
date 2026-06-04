@@ -16,12 +16,24 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
   const { data: members = [], isLoading } = useQuery({
     queryKey: ["members"],
     queryFn: fetchMembers,
   });
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("All");
+
+  const addMutation = useMutation({
+    mutationFn: () => createMember(),
+    onSuccess: async (m) => {
+      await qc.invalidateQueries({ queryKey: ["members"] });
+      toast.success("Member created — fill in details");
+      navigate({ to: "/members/$id/edit", params: { id: m.id } });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not create member"),
+  });
 
   const categories = useMemo(() => {
     const set = new Set<string>();
