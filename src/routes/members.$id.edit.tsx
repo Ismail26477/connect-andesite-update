@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate, useParams, Link } from "@tanstack/react-r
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Camera, Check, Image as ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
-import { fetchMember, initials, updateMember, uploadMedia, type Member } from "@/lib/members";
+import { initials, type Member } from "@/lib/members";
+import { fetchMemberAPI, updateMemberAPI } from "@/lib/api/members.server";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/members/$id/edit")({
@@ -22,7 +23,7 @@ function EditPage() {
   const qc = useQueryClient();
   const { data: member, isLoading } = useQuery({
     queryKey: ["member", id],
-    queryFn: () => fetchMember(id),
+    queryFn: () => fetchMemberAPI({ id }),
   });
   const [form, setForm] = useState<FormState | null>(null);
   const [saving, setSaving] = useState(false);
@@ -52,16 +53,30 @@ function EditPage() {
   async function handleUpload(kind: "photo" | "logo", file: File) {
     setUploading(kind);
     try {
-      const url = await uploadMedia(id, kind, file);
-      const field = kind === "photo" ? "photo_url" : "logo_url";
-      set(field, url);
-      await updateMember(id, { [field]: url });
-      await qc.invalidateQueries({ queryKey: ["member", id] });
-      await qc.invalidateQueries({ queryKey: ["members"] });
-      toast.success(`${kind === "photo" ? "Photo" : "Logo"} uploaded`);
+      // Convert file to base64 data URL using FileReader
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const url = reader.result as string;
+        const field = kind === "photo" ? "photo_url" : "logo_url";
+        set(field, url);
+        try {
+          await updateMemberAPI({ id, [field]: url });
+          await qc.invalidateQueries({ queryKey: ["member", id] });
+          await qc.invalidateQueries({ queryKey: ["members"] });
+          toast.success(`${kind === "photo" ? "Photo" : "Logo"} uploaded`);
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : "Upload failed");
+        } finally {
+          setUploading(null);
+        }
+      };
+      reader.onerror = () => {
+        toast.error("Failed to read file");
+        setUploading(null);
+      };
+      reader.readAsDataURL(file);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Upload failed");
-    } finally {
       setUploading(null);
     }
   }
@@ -71,7 +86,7 @@ function EditPage() {
     setUploading(kind);
     try {
       set(field, null);
-      await updateMember(id, { [field]: null });
+      await updateMemberAPI({ id, [field]: null });
       await qc.invalidateQueries({ queryKey: ["member", id] });
       await qc.invalidateQueries({ queryKey: ["members"] });
       toast.success(`${kind === "photo" ? "Profile photo" : "Business logo"} removed`);
@@ -87,7 +102,7 @@ function EditPage() {
     if (!form.name.trim()) { toast.error("Name is required"); return; }
     setSaving(true);
     try {
-      await updateMember(id, form);
+      await updateMemberAPI({ id, ...form });
       await qc.invalidateQueries({ queryKey: ["member", id] });
       await qc.invalidateQueries({ queryKey: ["members"] });
       toast.success("Saved!");

@@ -13,7 +13,8 @@ import {
   Linkedin,
   Briefcase,
 } from "lucide-react";
-import { fetchMember, initials } from "@/lib/members";
+import { initials } from "@/lib/members";
+import { fetchMemberAPI } from "@/lib/api/members.server";
 
 export const Route = createFileRoute("/members/$id/")({
   head: () => ({
@@ -30,7 +31,7 @@ function ProfilePage() {
   const { id } = useParams({ from: "/members/$id/" });
   const { data: member, isLoading } = useQuery({
     queryKey: ["member", id],
-    queryFn: () => fetchMember(id),
+    queryFn: () => fetchMemberAPI({ id }),
   });
 
   if (isLoading) {

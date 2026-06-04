@@ -3,7 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Search, Pencil, User2, Briefcase, MapPin, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { createMember, fetchMembers, initials, type Member } from "@/lib/members";
+import { initials, type Member } from "@/lib/members";
+import { fetchMembersAPI, createMemberAPI } from "@/lib/api/members.server";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -20,13 +21,13 @@ function HomePage() {
   const qc = useQueryClient();
   const { data: members = [], isLoading } = useQuery({
     queryKey: ["members"],
-    queryFn: fetchMembers,
+    queryFn: () => fetchMembersAPI(),
   });
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("All");
 
   const addMutation = useMutation({
-    mutationFn: () => createMember(),
+    mutationFn: () => createMemberAPI({}),
     onSuccess: async (m) => {
       await qc.invalidateQueries({ queryKey: ["members"] });
       toast.success("Member created — fill in details");
