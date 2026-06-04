@@ -163,10 +163,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function Row({
-  icon, label, value, href, external,
-}: { icon: React.ReactNode; label: string; value: string | null; href?: string; external?: boolean }) {
+  memberId, icon, label, value, href, external,
+}: { memberId: string; icon: React.ReactNode; label: string; value: string | null; href?: string; external?: boolean }) {
   const content = (
-    <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-card">
+    <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-card active:bg-secondary">
       <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-primary">{icon}</div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
@@ -174,24 +174,38 @@ function Row({
           {value || <MissingInline />}
         </p>
       </div>
+      <Pencil className="h-4 w-4 text-muted-foreground" />
     </div>
   );
   if (value && href) {
     return (
-      <a href={href} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined} className="block active:opacity-80">
-        {content}
-      </a>
+      <div className="flex items-center gap-2">
+        <a href={href} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined} className="block flex-1 active:opacity-80">
+          {content}
+        </a>
+        <Link to="/members/$id/edit" params={{ id: memberId }} className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white shadow-card text-primary active:bg-secondary">
+          <Pencil className="h-4 w-4" />
+        </Link>
+      </div>
     );
   }
-  return content;
+  return (
+    <Link to="/members/$id/edit" params={{ id: memberId }} className="block">
+      {content}
+    </Link>
+  );
 }
 
-function SocialChip({ icon, label, href }: { icon: React.ReactNode; label: string; href: string | null }) {
+function SocialChip({ memberId, icon, label, href }: { memberId: string; icon: React.ReactNode; label: string; href: string | null }) {
   if (!href) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-2 text-xs font-medium text-muted-foreground shadow-card">
+      <Link
+        to="/members/$id/edit"
+        params={{ id: memberId }}
+        className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-2 text-xs font-medium text-muted-foreground shadow-card active:bg-secondary"
+      >
         {icon} {label}: <span className="text-primary">Please Update</span>
-      </span>
+      </Link>
     );
   }
   return (
