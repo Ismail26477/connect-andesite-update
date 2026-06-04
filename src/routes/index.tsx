@@ -121,6 +121,16 @@ function HomePage() {
           </ul>
         )}
       </main>
+
+      {/* Floating Add Member button */}
+      <button
+        onClick={() => addMutation.mutate()}
+        disabled={addMutation.isPending}
+        className="fixed bottom-6 right-5 z-20 flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-elevated active:opacity-90 disabled:opacity-60"
+      >
+        {addMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
+        Add Member
+      </button>
     </div>
   );
 }
